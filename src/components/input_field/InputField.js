@@ -1,5 +1,6 @@
 import React from 'react';
 import './InputField.css';
+import SendIcon from '@material-ui/icons/SendRounded';
 
 const InputField = (props) => (
   <div className="form">
@@ -11,7 +12,7 @@ const InputField = (props) => (
       value = {props.value}
       onChange = {props.onChange}
     />
-    <button className="sendButton" onClick={props.onSubmit}>Send</button>
+    <button className="sendButton" onClick={props.onSubmit}><SendIcon/></button>
   </div>
 )
 

@@ -7,8 +7,8 @@
     border: "10px";
     border-radius: 10;
     padding: 1%;
-    width: 80%;
     font-size: 1.2em;
+    width: 90%;
     margin-left: '50px';
   }
   
@@ -20,9 +20,9 @@
     color: #fff !important;
     text-transform: uppercase;
     text-decoration: none;
-    background: #2979FF;
+    background: #3b6978;
     padding: 2%;
+    width: 10%;
     display: inline-block;
     border: none;
-    width: 20%;
   }
