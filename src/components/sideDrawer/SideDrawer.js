@@ -18,7 +18,13 @@ import ListItemText from '@material-ui/core/ListItemText';
 import Login from '@material-ui/icons/LockOpen';
 import Register from '@material-ui/icons/HowToReg';
 import Home from '@material-ui/icons/Home';
-import { Link} from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import KeyIcon from '@material-ui/icons/VpnKey';
+import swal from 'sweetalert';
+import Contastant from '@material-ui/icons/RecordVoiceOver';
+import Interviewer from '@material-ui/icons/SupervisorAccount';
+import Admin from '@material-ui/icons/EmojiPeople';
+
 const drawerWidth = 240;
 
 const useStyles = makeStyles(theme => ({
@@ -83,7 +89,9 @@ const useStyles = makeStyles(theme => ({
 }));
 
 
-export default function MiniDrawer() {
+
+export default function SideDrawer(props) {
+
   const classes = useStyles();
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
@@ -96,12 +104,15 @@ export default function MiniDrawer() {
     setOpen(false);
   };
 
+  const onKeyClick = () => {
+    swal("Key: " + `${props.roomKey}`);
+  }
 
   return (
     <div className={classes.root}>
       <CssBaseline />
       <AppBar
-         style={{backgroundColor:'#856c8b'}}
+        style={{ backgroundColor: '#856c8b' }}
         position="fixed"
         className={clsx(classes.appBar, {
           [classes.appBarShift]: open,
@@ -120,12 +131,12 @@ export default function MiniDrawer() {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap>
-            CRUD App
+            {props.room}
           </Typography>
         </Toolbar>
       </AppBar>
       <Drawer
-      variant="permanent"
+        variant="permanent"
         className={clsx(classes.drawer, {
           [classes.drawerOpen]: open,
           [classes.drawerClose]: !open,
@@ -137,39 +148,57 @@ export default function MiniDrawer() {
           }),
         }}
       >
-        <div style={{backgroundColor : '#cccccc'}}>
-        <div className={classes.toolbar}>
-          <Typography variant="h6" noWrap >Navigate</Typography>
-          <IconButton onClick={handleDrawerClose}>
-            {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-          </IconButton>
-        </div>
+        <div style={{ backgroundColor: '#cccccc' }}>
+          <div className={classes.toolbar}>
+            <Typography variant="h6" noWrap >People online</Typography>
+            <IconButton onClick={handleDrawerClose}>
+              {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+            </IconButton>
+          </div>
         </div>
 
         <Divider />
         <Divider />
 
         <div>
-        <List>
-          <ListItem button component={Link} to='/'>
-            <ListItemIcon><Home/></ListItemIcon>
-            <ListItemText primary='Home'/>
-          </ListItem>
-
-          <ListItem button component={Link} to='/login'>
-            <ListItemIcon><Login/></ListItemIcon>
-            <ListItemText primary='Login'/>
-          </ListItem>
-
-          <ListItem button component={Link} to='/register'>
-            <ListItemIcon><Register/></ListItemIcon>
-            <ListItemText primary='Register'/>
-          </ListItem>
-        </List>
+          <List>
+            {props.users.map((user) => {
+              if (user.role === 'admin') {
+                return (<ListItem>
+                  <ListItemIcon><Admin/></ListItemIcon>
+                  <ListItemText>{user.name} ({user.role})</ListItemText>
+                </ListItem>);
+              }
+              else if(user.role === 'interviewer'){
+                return (<ListItem>
+                  <ListItemIcon><Interviewer/></ListItemIcon>
+                  <ListItemText>{user.name} ({user.role})</ListItemText>
+                </ListItem>);
+              }
+              else{
+                return (<ListItem>
+                  <ListItemIcon><Contastant/></ListItemIcon>
+                  <ListItemText>{user.name} ({user.role})</ListItemText>
+                </ListItem>);
+              }
+            })}
+            {/* <ListItem>
+              <ListItemIcon>{user.role === 'admin' ? (<Admin />) : (<Interviewer />)}</ListItemIcon>
+              <ListItemText>{user.name} ({user.role})</ListItemText>
+            </ListItem> */}
+          </List>
         </div>
 
+        <Divider />
+        <Divider />
+        <ListItem button onClick={onKeyClick}>
+          <ListItemIcon><KeyIcon /></ListItemIcon>
+          <ListItemText primary='Key' />
+        </ListItem>
+
+
       </Drawer>
-        <div className={classes.toolbar} />
+      <div className={classes.toolbar} />
     </div>
   )
 }

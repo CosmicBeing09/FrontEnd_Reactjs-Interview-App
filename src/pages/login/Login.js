@@ -25,7 +25,8 @@ class Login extends Component {
             room: null,
             buttonLevel: "Join Room",
             dropDownOpen: false,
-            key : ''
+            key : '',
+            showKey : true
         }
         this.handleChange = this.handleChange.bind(this);
         this.handleClick = this.handleClick.bind(this);
@@ -59,13 +60,14 @@ class Login extends Component {
 
     handleDropDownChange = event => {
         this.setState({ [event.target.name]: event.target.value });
-        console.log(event.target.value);
         
         if(event.target.value === 'admin'){
             this.setState({buttonLevel: "Create Room"});
+            this.setState({showKey : false});
         }
         else{
             this.setState({buttonLevel: "Join Room"});
+            this.setState({showKey : true});
         }
     }
 
@@ -152,9 +154,10 @@ class Login extends Component {
                                         </Select>
                                     </FormControl>
                                 </Grid>
-
                                 <Grid item xs={12}>
                                 </Grid>
+
+                                {this.state.showKey?(
                                 <Grid item xs={12}>
                                 <TextField
                                         variant="outlined"
@@ -165,8 +168,9 @@ class Login extends Component {
                                         autoComplete="Key"
                                         onChange={this.handleChange}
                                     />
-                                </Grid>
-                            </Grid>
+                                </Grid>):(<div></div>)}
+
+                               </Grid> 
 
                             <Button
                                 style={{ marginTop: '20px' }}

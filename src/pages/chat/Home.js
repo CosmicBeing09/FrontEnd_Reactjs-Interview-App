@@ -7,7 +7,6 @@ import ScrollTopToBottom from 'react-scroll-to-bottom';
 import './Home.css';
 import { css } from 'glamor';
 import AceEditor from 'react-ace';
-import Collapsible from 'react-collapsible';
 import Button from '@material-ui/core/Button';
 import { makeStyles } from '@material-ui/core/styles';
 import InputLabel from '@material-ui/core/InputLabel';
@@ -19,7 +18,6 @@ import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import Typography from '@material-ui/core/Typography';
-//import Grid from '@material-ui/core/Grid';
 //languages
 import "ace-builds/src-noconflict/mode-java";
 import "ace-builds/src-noconflict/mode-c_cpp";
@@ -34,7 +32,8 @@ import Col from 'react-bootstrap/Col';
 import { TextareaAutosize } from '@material-ui/core';
 import SideDrawer from '../../components/sideDrawer/SideDrawer';
 import Card from 'react-bootstrap/Card';
-
+import swal from 'sweetalert';
+import LoadingButton from 'react-bootstrap-button-loader';
 const socket = io(ENDPOINT);
 
 class Home extends Component {
@@ -51,8 +50,15 @@ class Home extends Component {
             language: 'java',
             mode: 'java',
             theme: 'monokai',
-            codeInputValue : null,
-            output : ''
+            codeInputValue: null,
+            output: '',
+            key : '',
+            keyStored : false,
+            question : '',
+            room : '',
+            users : [],
+            questionDisabled : true,
+            runButtonLoading : false
         }
 
         this.onSelectionChange = this.onSelectionChange.bind(this);
@@ -73,37 +79,80 @@ class Home extends Component {
         this.setState({ name });
 
         const room = this.props.location.state.room;
+        this.setState({room});
+
         const role = this.props.location.state.role;
+        if(role === 'admin'){
+            this.setState({questionDisabled : false});
+        }
+
         const key = this.props.location.state.key;
 
         socket.emit('join', { name, room, role, key }, (error) => {
             if (error) {
-                alert(error);
+                swal({
+                    title : 'Joining denied!',
+                    text : error,
+                    icon : 'warning',
+                    button : 'Ok',
+                }).then(() => {
+                    window.location.replace('/');
+                });
             }
         });
 
         socket.on('message', message => {
             this.setState({ roomMessages: [...this.state.roomMessages, message] });
-            console.log(message);
+            console.log(message.key);
 
+            if(this.state.keyStored === false){
+            if(message.key !== undefined){
+                this.setState({key : message.key});
+                this.setState({keyStored : true});
+            }
+            else{
+                this.setState({key : this.props.location.state.key});
+                this.setState({keyStored : true});
+            }
+        }
         });
 
         socket.on('history', messages => {
             this.setState({ roomMessages: [...this.state.roomMessages, ...messages] });
-            console.log(messages);
+            
+        });
+
+        socket.on('codeHistory', data => {
+            if(data !== null)
+            this.setState({code : data}); 
+        });
+
+        
+        socket.on('questionHistory', data => {
+            this.setState({question : data});
         });
 
         socket.on('code', message => {
             this.setState({ code: message.code });
         });
+
+        socket.on('question', message => {
+            this.setState({ question : message.question });
+        });
+
+        socket.on('roomData', data => {
+            console.log(data);
+            this.setState({ room : data.room});
+            this.setState({ users : data.users});
+        });
     }
 
     handleRun = () => {
-
+        this.setState({runButtonLoading : true});
         const data = {
             "lang": this.state.language,
             "code": this.state.code,
-            "input" : this.state.codeInputValue
+            "input": this.state.codeInputValue
         };
 
         fetch(`http://localhost:5000/api/run`, {
@@ -113,13 +162,18 @@ class Home extends Component {
             },
             body: JSON.stringify(data)
         }).then(res => res.json()).then(res => {
-            console.log(res);
-            this.setState({output : res.message});
+            this.setState({runButtonLoading : false});
+            this.setState({ output: res.message });
         });
     }
 
     onCode = (code) => {
         socket.emit('code', code, () => { });
+    }
+
+    onQuestion = event => {
+        this.setState({[event.target.name] : event.target.value});
+        socket.emit('question', event.target.value, () => { }); 
     }
 
     onSubmit = event => {
@@ -174,6 +228,7 @@ class Home extends Component {
         this.setState({ themeDropDownOpen: true });
     }
 
+
     render() {
         const ROOT_CSS = css({
             height: 420,
@@ -215,8 +270,8 @@ class Home extends Component {
         }));
         return (
             <div>
-                <SideDrawer />
-                <div style={{ marginLeft: '80px',marginRight : '24px',marginTop : '8px' }}>
+                <SideDrawer roomKey={this.state.key} room={this.state.room} users={this.state.users}/>
+                <div style={{ marginLeft: '80px', marginRight: '24px', marginTop: '8px' }}>
 
                     <ExpansionPanel>
                         <ExpansionPanelSummary
@@ -228,20 +283,28 @@ class Home extends Component {
                             <Typography className={classes.heading}>Question</Typography>
                         </ExpansionPanelSummary>
                         <ExpansionPanelDetails>
+                            <div style={{ width: '100%' }}>
                             <Row>
-                                <Col>
-                                    <div style={{ marginTop: '24px' }}>
+                                <Col  xs={12} md={8}>
+                                    <div style={{ marginTop: '24px', marginLeft : '100px' }}>
                                         <TextareaAutosize
-                                            cols={50}
-                                            rowsMin={8}
-                                            rowsMax={8}
+                                            cols={80}
+                                            rowsMin={16}
+                                            rowsMax={16}
                                             aria-label="question"
                                             id="question"
                                             name="question"
+                                            style={{fontSize : 24}}
+                                            value = {this.state.question}
+                                            onChange = {this.onQuestion}
+                                            disabled = {this.state.questionDisabled}
                                         />
                                     </div>
                                 </Col>
+                                <Col  xs={6} md={4}>
+                                </Col>
                             </Row>
+                            </div>
                         </ExpansionPanelDetails>
                     </ExpansionPanel>
 
@@ -333,7 +396,7 @@ class Home extends Component {
                                                         aria-label="input"
                                                         id="input"
                                                         name="codeInputValue"
-                                                        onChange = {this.onChange}
+                                                        onChange={this.onChange}
                                                     />
                                                 </div>
                                             </Col>
@@ -350,7 +413,7 @@ class Home extends Component {
                                                         aria-label="output"
                                                         id="output"
                                                         name="output"
-                                                        value = {this.state.output}
+                                                        value={this.state.output}
                                                     />
                                                 </div>
                                             </Col>
@@ -359,25 +422,24 @@ class Home extends Component {
                                 </Row>
                                 <Row xs={2} md={4} lg={6}>
                                     <Col>
-                                        <Button
+                                        <LoadingButton
                                             style={{ marginTop: '20px', backgroundColor: "#eb4559" }}
-                                            variant="contained"
-                                            className={classes.submit}
                                             onClick={this.handleRun}
+                                            loading={this.state.runButtonLoading}
                                         >
                                             Run
-                                        </Button >
+                                        </LoadingButton >
                                     </Col>
                                 </Row>
                             </div>
                         </ExpansionPanelDetails>
                     </ExpansionPanel>
 
-                   <Card style={{marginTop : '8px',backgroundColor : '#ecfbfc'}}>
-                    <ScrollTopToBottom className={ROOT_CSS}>
-                        <Messages messages={this.state.roomMessages} name={this.state.name} />
-                    </ScrollTopToBottom>
-                    <InputField onChange={this.onChange} onSubmit={this.onSubmit} value={this.state.message} />
+                    <Card style={{ marginTop: '8px', backgroundColor: '#ecfbfc' }}>
+                        <ScrollTopToBottom className={ROOT_CSS}>
+                            <Messages messages={this.state.roomMessages} name={this.state.name} />
+                        </ScrollTopToBottom>
+                        <InputField onChange={this.onChange} onSubmit={this.onSubmit} value={this.state.message} />
                     </Card>
                 </div>
             </div>
