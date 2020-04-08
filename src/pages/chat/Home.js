@@ -34,6 +34,33 @@ import SideDrawer from '../../components/sideDrawer/SideDrawer';
 import Card from 'react-bootstrap/Card';
 import swal from 'sweetalert';
 import LoadingButton from 'react-bootstrap-button-loader';
+import CKEditor from '@ckeditor/ckeditor5-react';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+
+
+function MinHeightPlugin(editor) {
+    this.editor = editor;
+  }
+  
+  MinHeightPlugin.prototype.init = function() {
+    this.editor.ui.view.editable.extendTemplate({
+      attributes: {
+        style: {
+          minHeight: '300px'
+        }
+      }
+    });
+  };
+ClassicEditor.builtinPlugins.push(MinHeightPlugin);
+ClassicEditor
+    .create( document.querySelector( '#editor1' ) )
+    .then( editor => {
+      // console.log( editor );
+    })
+    .catch( error => {
+      console.error( error );
+    });
+
 const socket = io(ENDPOINT);
 
 class Home extends Component {
@@ -58,7 +85,8 @@ class Home extends Component {
             room : '',
             users : [],
             questionDisabled : true,
-            runButtonLoading : false
+            runButtonLoading : false,
+            codeMessage : false
         }
 
         this.onSelectionChange = this.onSelectionChange.bind(this);
@@ -129,7 +157,9 @@ class Home extends Component {
 
         
         socket.on('questionHistory', data => {
+            if(data !== null){
             this.setState({question : data});
+            }
         });
 
         socket.on('code', message => {
@@ -138,6 +168,8 @@ class Home extends Component {
 
         socket.on('question', message => {
             this.setState({ question : message.question });
+            console.log(message);
+            
         });
 
         socket.on('roomData', data => {
@@ -177,7 +209,13 @@ class Home extends Component {
     }
 
     onSubmit = event => {
-        socket.emit('sendMessage', this.state.message, () => {
+        var temp = "";
+        if(this.state.codeMessage){
+           temp = '<#>' + this.state.message;
+           this.setState({codeMessage : false});
+        }
+        else temp = this.state.message;
+        socket.emit('sendMessage', temp, () => {
             this.setState({ message: '' });
         });
 
@@ -190,11 +228,19 @@ class Home extends Component {
     }
 
     onSelectionChange = () => {
-        // const content = this.refs.aceEditor.editor.session.getTextRange(selectedText.getRange());
+        this.setState({codeMessage : true});
         const selectedText = this.refs.aceEditor.editor.getSelectedText();
-        console.log(selectedText);
+        const position = this.refs.aceEditor.editor.selection.getCursor();
 
-        this.setState({ message: selectedText });
+       //var session =this.refs.aceEditor.editor.session;
+       //var currentLine = (session.getDocument().getLine(position.row)).trim();
+       
+       var selectedTextLineNo = parseInt(position.row) + 1;
+        
+       const finalText = selectedTextLineNo + ': '+selectedText;
+        console.log(finalText);
+
+        this.setState({ message: finalText });
     }
 
     handleDropDownChange = event => {
@@ -285,9 +331,36 @@ class Home extends Component {
                         <ExpansionPanelDetails>
                             <div style={{ width: '100%' }}>
                             <Row>
-                                <Col  xs={12} md={8}>
-                                    <div style={{ marginTop: '24px', marginLeft : '100px' }}>
-                                        <TextareaAutosize
+                                <Col>
+                                    <div style={{ marginTop: '24px'}}>
+                                        {this.state.questionDisabled ? (<Card>
+                                           <div style={{textAlign : 'left' , padding : '24px'}} dangerouslySetInnerHTML={{ __html: this.state.question }}></div>   
+                                           </Card>   
+                                        ):(
+                                            <CKEditor
+                                            editor={ClassicEditor}
+                                            data={this.state.question}
+                                            onInit={editor => {
+                                                console.log('Editor is ready to use!', editor);
+                                            }}
+                                            onChange={(event, editor) => {
+                                                const data = editor.getData();
+                                                const description = editor.getData();
+                                                this.setState({ question : description });
+                                                // console.log(this.state.description)
+                                                socket.emit('question', description, () => { }); 
+                                                console.log({ event, editor, data });
+                                            }}
+                                            onBlur={(event, editor) => {
+                                                console.log('Blur.', editor);
+                                            }}
+                                            onFocus={(event, editor) => {
+                                                console.log('Focus.', editor);
+                                            }}
+                                        />
+                                        )}
+                                        
+                                        {/* <TextareaAutosize
                                             cols={80}
                                             rowsMin={16}
                                             rowsMax={16}
@@ -298,11 +371,10 @@ class Home extends Component {
                                             value = {this.state.question}
                                             onChange = {this.onQuestion}
                                             disabled = {this.state.questionDisabled}
-                                        />
+                                        /> */}
                                     </div>
                                 </Col>
-                                <Col  xs={6} md={4}>
-                                </Col>
+                                
                             </Row>
                             </div>
                         </ExpansionPanelDetails>

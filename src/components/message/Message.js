@@ -11,21 +11,40 @@ const Message = ({message : {text, user}, name}) => {
         isSentByCurrentUser = true;
     }
 
+    let code = false;
+    var textTemp = text;
+    if(text.includes('<#>')){
+      code = true;
+      textTemp =  text.replace('<#>','');
+    }
+    else{
+      code = false;
+    }
+
     return(
         isSentByCurrentUser
         ? (
           <div className="messageContainer justifyEnd">
             <p className="sentText pr-10">{trimmedName}</p>
-            <div className="messageBox backgroundBlue">
-              <p className="messageText colorWhite">{ReactEmoji.emojify(text)}</p>
-            </div>
+            {code ? (
+              <div className="codeBox backgroundHighlight">
+              <p className="messageText colorWhite">{ReactEmoji.emojify(textTemp)}</p>
+            </div>):(
+              <div className="messageBox backgroundBlue">
+              <p className="messageText colorWhite">{ReactEmoji.emojify(textTemp)}</p>
+            </div>)}
+           
           </div>
           )
           : (
             <div className="messageContainer justifyStart">
+                {code ? (
+              <div className="codeBox backgroundHighlight">
+              <p className="messageText colorWhite">{ReactEmoji.emojify(textTemp)}</p>
+            </div>):(
               <div className="messageBox backgroundLight">
-                <p className="messageText colorDark">{ReactEmoji.emojify(text)}</p>
-              </div>
+              <p className="messageText colorWhite">{ReactEmoji.emojify(textTemp)}</p>
+            </div>)}
               <p className="sentText pl-10 ">{user}</p>
             </div>
           )
