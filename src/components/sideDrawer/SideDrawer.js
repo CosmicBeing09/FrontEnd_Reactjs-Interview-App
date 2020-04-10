@@ -150,7 +150,7 @@ export default function SideDrawer(props) {
       >
         <div style={{ backgroundColor: '#cccccc' }}>
           <div className={classes.toolbar}>
-            <Typography variant="h6" noWrap >People online</Typography>
+            <Typography variant="h6" noWrap >People Online</Typography>
             <IconButton onClick={handleDrawerClose}>
               {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
             </IconButton>
@@ -166,20 +166,21 @@ export default function SideDrawer(props) {
               if (user.role === 'admin') {
                 return (<ListItem>
                   <ListItemIcon><Admin/></ListItemIcon>
-                  <ListItemText>{user.name} ({user.role})</ListItemText>
+                  <ListItemText><b>{user.name}</b> ({user.role})</ListItemText>
                 </ListItem>);
               }
               else if(user.role === 'interviewer'){
                 return (<ListItem>
                   <ListItemIcon><Interviewer/></ListItemIcon>
-                  <ListItemText>{user.name} ({user.role})</ListItemText>
+                  <ListItemText><b>{user.name}</b> ({user.role})</ListItemText>
                 </ListItem>);
               }
               else{
                 return (<ListItem>
                   <ListItemIcon><Contastant/></ListItemIcon>
-                  <ListItemText>{user.name} ({user.role})</ListItemText>
+                  <ListItemText><b>{user.name}</b> ({user.role})</ListItemText>
                 </ListItem>);
+                 
               }
             })}
             {/* <ListItem>

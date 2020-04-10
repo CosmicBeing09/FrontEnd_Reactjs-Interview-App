@@ -223,6 +223,11 @@ class Home extends Component {
 
     onChange = event => {
         this.setState({ [event.target.name]: event.target.value });
+        console.log(this.state.message);
+        
+        if(this.state.message === "" || this.state.message === null || this.state.message === undefined){
+            this.setState({codeMessage : false});
+        }
         //console.log(this.state.message);
 
     }
@@ -237,7 +242,7 @@ class Home extends Component {
        
        var selectedTextLineNo = parseInt(position.row) + 1;
         
-       const finalText = selectedTextLineNo + ': '+selectedText;
+       const finalText = selectedTextLineNo + ':'+selectedText;
         console.log(finalText);
 
         this.setState({ message: finalText });
