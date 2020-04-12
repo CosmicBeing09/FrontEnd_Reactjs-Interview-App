@@ -344,7 +344,7 @@ class Home extends Component {
                                         ):(
                                             <CKEditor
                                             editor={ClassicEditor}
-                                            data={this.state.question}
+                                           // data={this.state.question}
                                             onInit={editor => {
                                                 console.log('Editor is ready to use!', editor);
                                             }}
